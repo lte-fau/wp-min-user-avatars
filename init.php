@@ -341,7 +341,7 @@ remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 	 * @param int $user_id
 	 */
 	public function set_avatar_directory( $param ){
-    $mydir = '/profilephoto';
+    $mydir = '/photos';
 
     $param['path'] = $param['basedir'] . $mydir;
     $param['url'] = $param['baseurl'] . $mydir;
