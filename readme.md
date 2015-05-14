@@ -1,4 +1,4 @@
-=== Basic User Avatars ===
+# Basic User Avatars
 Contributors: jaredatch
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=AD8KTWTTDX9JL
 Tags: avatar, gravatar, bbpress, profiles
@@ -8,7 +8,7 @@ Stable tag: trunk
  
 Adds an avatar upload field to user profiles. Front-end support. bbPress support.
 
-== Description ==
+## Description
 
 Adds an avatar upload field to user profiles inside the WordPress dashboard.
 
@@ -20,7 +20,7 @@ Automatically adds avatar support to bbPress (2.3+) user profiles if bbPress is 
 
 Note: This plugin is a fork of Simple Local Avatars v1.3.1 by Jake Goldman (10up). If you want snazzy ajax and some other nifty features, check out [Simple Local Avatars 2.x](http://wordpress.org/plugins/simple-local-avatars).
 
-== Installation ==
+## Installation 
 
 1. Upload `basic-user-avatars` to your `/wp-content/plugins/` directory or download through the Plugins page
 1. Activate the plugin through the 'Plugins' menu in WordPress
@@ -31,9 +31,9 @@ bbPress support is added automatically if bbPress is activated.
 
 Shortcode for front-end support is `[basic-user-avatars]`.
 
-== Frequently Asked Questions ==
+## Frequently Asked Questions
 
-= I'm still having problems =
+### I'm still having problems 
 
 While this plugin has been tested with common server setups, some enviroments could cause an issue.
 
@@ -41,23 +41,23 @@ If you are having a problem deactivate all plugins other than this one and then 
 
 If things are still not functioning incorrectly then proceed to reporting an issue. The ideal method is via [GitHub issues](https://github.com/jaredatch/basic-user-avatars/issues/).
 
-== Screenshots ==
+## Screenshots
 
 1. Option on the user profile edit page. 
 1. Option on the front-end via the shortcode.
 1. Option on the bbPress user profile edit page. 
 
-== Changelog ==
+## Changelog 
 
-= 1.0.3 (5/8/2015)
+### 1.0.3 (5/8/2015)
 * Added Swedish and Finnish translations - props dmaester
 
-= 1.0.2 (4/17/2015)
+### 1.0.2 (4/17/2015)
 * Added POT file for translation
 
-= 1.0.1 (3/17/2015)
+### 1.0.1 (3/17/2015)
 * Updated textdomain for better support
 * Added plugin to GitHub for better collaboration
 
-= 1.0.0 =
+### 1.0.0
 * Initial launch, should be considered beta. Use with caution.
