@@ -47,7 +47,7 @@ class basic_user_avatars {
 	 * @var int
 	 */
 	private $user_id_being_edited;
-	private $optionen = NULL;
+	private static $options = NULL;
 
 	/**
 	 * Initialize all the things
@@ -56,8 +56,11 @@ class basic_user_avatars {
 	 */
 	public function __construct() {
 		//Get default options
-		$this->optionen = array('upload_path' => wp_upload_dir());
 
+		$db_options=get_option('basic_user_avatars_caps');
+		self::$options = array('upload_path' => wp_upload_dir(),
+								'deny_upload'=>$db_options['basic_user_avatars_caps']
+								);
 		// Text domain
 		$this->load_textdomain();
 
@@ -91,11 +94,11 @@ class basic_user_avatars {
 	 * @since 1.0.0
 	 */
 	public function admin_init() {
-
 		// Register/add the Discussion setting to restrict avatar upload capabilites
-		register_setting( 'discussion', 'basic_user_avatars_caps', array( $this, 'sanitize_options' ) );
-		add_settings_field( 'basic-user-avatars-caps', __( 'Local Avatar Permissions', 'basic-user-avatars' ), array( $this, 'avatar_settings_field' ), 'discussion', 'avatars' );
+		register_setting( 'discussion', 'basic_user_avatars_caps', array( __CLASS__, 'sanitize_options' ) );
+		add_settings_field( 'basic-user-avatars-caps', __( 'Local Avatar Permissions', 'basic-user-avatars' ), array( __CLASS__, 'avatar_settings_field' ), 'discussion', 'avatars' );
 	}
+
 
 	/**
 	 * Discussion settings option
@@ -103,11 +106,12 @@ class basic_user_avatars {
 	 * @since 1.0.0
 	 * @param array $args [description]
 	 */
-	public function avatar_settings_field( $args ) {
-		$options = get_option( 'basic_user_avatars_caps' );
+	public static function avatar_settings_field( $args ) {
+		$options = get_option( 'basic_user_avatars_caps');
 		?>
 		<label for="basic_user_avatars_caps">
-			<input type="checkbox" name="basic_user_avatars_caps" id="basic_user_avatars_caps" value="1" <?php checked( $options['basic_user_avatars_caps'], 1 ); ?>/>
+			<input type="checkbox" name="basic_user_avatars_caps" id="basic_user_avatars_caps" value="1"
+					<?php checked(self::$options['deny_upload'], 1 ); ?>/>
 			<?php _e( 'Only allow users with file upload capabilities to upload local avatars (Authors and above)', 'basic-user-avatars' ); ?>
 		</label>
 		<?php
@@ -121,7 +125,7 @@ class basic_user_avatars {
 	 * @return array
 	 */
 	public function sanitize_options( $input ) {
-		$new_input['basic_user_avatars_caps'] = empty( $input['basic_user_avatars_caps'] ) ? 0 : 1;
+		$new_input['basic_user_avatars_caps'] =  $input['basic_user_avatars_caps'] ? 1 : 0;
 		return $new_input;
 	}
 
@@ -137,6 +141,7 @@ class basic_user_avatars {
 	 * @return string
 	 */
 	public function get_avatar( $avatar = '', $id_or_email, $size = 96, $default = '', $alt = false ) {
+add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 		// Determine if we recive an ID or string
 		if ( is_numeric( $id_or_email ) )
 			$user_id = (int) $id_or_email;
@@ -149,9 +154,9 @@ class basic_user_avatars {
 			return $avatar;
 
 		$local_avatars = get_user_meta( $user_id, 'basic_user_avatar', true );
-/*print("<pre>");
-print_r($local_avatars);
-print("</pre>");*/
+		/*print("<pre>");
+		print_r($local_avatars);
+		print("</pre>");*/
 		if ( empty( $local_avatars ) || empty( $local_avatars['full'] ) )
 			return $avatar;
 
@@ -163,7 +168,7 @@ print("</pre>");*/
 		// Generate a new size
 		if ( empty( $local_avatars[$size] ) ) {
 
-			$upload_path =$this->optionen['upload_path'];
+			$upload_path =self::$options['upload_path'];
 			$avatar_full_path = str_replace( $upload_path['baseurl'], $upload_path['basedir'], $local_avatars['full'] );
 			$image            = wp_get_image_editor( $avatar_full_path );
 
@@ -173,7 +178,7 @@ print("</pre>");*/
 			}
 
 			// Deal with original being >= to original image (or lack of sizing ability)
-			$local_avatars[$size] = is_wp_error( $image_sized ) ? $local_avatars[$size] = $local_avatars['full'] : str_replace( $upload_path['basedir'], $upload_path['baseurl'], $image_sized['path'] );
+			$local_avatars[$size] = is_wp_error( $image_sized ) ? $local_avatars[$size] = $local_avatars['full'] : str_replace( $upload_path['basedir'], 					$upload_path['baseurl'], $image_sized['path'] );
 
 			// Save updated avatar sizes
 			update_user_meta( $user_id, 'basic_user_avatar', $local_avatars );
@@ -185,7 +190,8 @@ print("</pre>");*/
 		$author_class = is_author( $user_id ) ? ' current-author' : '' ;
 		$avatar       = "<img alt='" . esc_attr( $alt ) . "' src='" . $local_avatars[$size] . "' class='avatar avatar-{$size}{$author_class} photo' height='{$size}' width='{$size}' />";
 		return apply_filters( 'basic_user_avatar', $avatar );
-	}
+remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
+}
 	
 
 	/**
@@ -196,7 +202,7 @@ print("</pre>");*/
 	 * @return
 	 */
 	public function edit_user_profile( $profileuser ) {
-
+		?>
 
 		<h3><?php _e( 'Avatar', 'basic-user-avatars' ); ?></h3>
 		<table class="form-table">
@@ -207,8 +213,8 @@ print("</pre>");*/
 				</td>
 				<td>
 				<?php
-				$options = get_option( 'basic_user_avatars_caps' );
-				if ( empty( $options['basic_user_avatars_caps'] ) || current_user_can( 'upload_files' ) ) {
+
+				if ( empty( self::$options['deny_upload'] ) || current_user_can( 'upload_files' ) ) {
 					// Nonce security ftw
 					wp_nonce_field( 'basic_user_avatar_nonce', '_basic_user_avatar_nonce', false );
 					
@@ -244,7 +250,7 @@ print("</pre>");*/
 	 * @param int $user_id
 	 */
 	public function edit_user_profile_update( $user_id ) {
-
+add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 		// Check for nonce otherwise bail
 		if ( ! isset( $_POST['_basic_user_avatar_nonce'] ) || ! wp_verify_nonce( $_POST['_basic_user_avatar_nonce'], 'basic_user_avatar_nonce' ) )
 			return;
@@ -292,7 +298,8 @@ print("</pre>");*/
 			// Nuke the current avatar
 			$this->avatar_delete( $user_id );
 		}
-	}
+remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
+}
 
 	/**
 	 * Remove the custom get_avatar hook for the default avatar list output on 
@@ -315,16 +322,38 @@ print("</pre>");*/
 	 */
 	public function avatar_delete( $user_id ) {
 		$old_avatars = get_user_meta( $user_id, 'basic_user_avatar', true );
-		$upload_path = $this->optionen['upload_path'];
+		$upload_path = self::$options['upload_path'];
 
 		if ( is_array( $old_avatars ) ) {
 			foreach ( $old_avatars as $old_avatar ) {
 				$old_avatar_path = str_replace( $upload_path['baseurl'], $upload_path['basedir'], $old_avatar );
-				unlink( $old_avatar_path );
+				@unlink( $old_avatar_path );
 			}
 		}
 
 		delete_user_meta( $user_id, 'basic_user_avatar' );
+	}
+	
+	/**
+	 * Set upload dir
+	 *
+	 * @since 1.0.0
+	 * @param int $user_id
+	 */
+	public function set_avatar_directory( $param ){
+    $mydir = '/profilephoto';
+
+    $param['path'] = $param['basedir'] . $mydir;
+    $param['url'] = $param['baseurl'] . $mydir;
+	/*
+    error_log("path={$param['path']}");  
+    error_log("url={$param['url']}");
+    error_log("subdir={$param['subdir']}");
+    error_log("basedir={$param['basedir']}");
+    error_log("baseurl={$param['baseurl']}");
+    error_log("error={$param['error']}"); 
+	*/
+	return $param;
 	}
 
 	/**
