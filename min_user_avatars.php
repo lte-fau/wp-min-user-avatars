@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Minimal User Avatars
- * Plugin URI:  
+ * Plugin URI:  https://github.com/sistlind/wp-min-user-avatars
  * Description: Adds an avatar upload field to user profiles. Fork of Basic User Avatars 1.0.3.
  * Version:     git
  * Author:      Stefan Lindner
@@ -56,9 +56,13 @@ class min_user_avatars {
 		//Get default options
 
 		$db_options=get_option('min_user_avatars_caps');
-		self::$options = array('upload_path' => wp_upload_dir(),
+		self::$options = array('upload_dir' => 'photos',// ->uploads/photos
 								'deny_upload'=>$db_options['min_user_avatars_caps']
 								);
+		//save upload_path
+		add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
+    self::$options['upload_path']=wp_upload_dir();
+    remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 		// Text domain
 		$this->load_textdomain();
 
@@ -139,7 +143,7 @@ class min_user_avatars {
 	 * @return string
 	 */
 	public function get_avatar_filter( $avatar = '', $id_or_email, $size = 96, $default = '', $alt = false ) {
-add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
+
 		// Determine if we recive an ID or string
 		if ( is_numeric( $id_or_email ) )
 			$user_id = (int) $id_or_email;
@@ -166,8 +170,7 @@ add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 		// Generate a new size
 		if ( empty( $local_avatars[$size] ) ) {
 
-			$upload_path =self::$options['upload_path'];
-			$avatar_full_path = str_replace( $upload_path['baseurl'], $upload_path['basedir'], $local_avatars['full'] );
+			$avatar_full_path = str_replace( self::$options['upload_path']['baseurl'], self::$options['upload_path']['basedir'], $local_avatars['full'] );
 			$image            = wp_get_image_editor( $avatar_full_path );
 
 			if ( ! is_wp_error( $image ) ) {
@@ -176,7 +179,7 @@ add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 			}
 
 			// Deal with original being >= to original image (or lack of sizing ability)
-			$local_avatars[$size] = is_wp_error( $image_sized ) ? $local_avatars[$size] = $local_avatars['full'] : str_replace( $upload_path['basedir'], 					$upload_path['baseurl'], $image_sized['path'] );
+			$local_avatars[$size] = is_wp_error( $image_sized ) ? $local_avatars[$size] = $local_avatars['full'] : str_replace( self::$options['upload_path']['basedir'], self::$options['upload_path']['baseurl'], $image_sized['path'] );
 
 			// Save updated avatar sizes
 			update_user_meta( $user_id, 'min_user_avatar', $local_avatars );
@@ -188,7 +191,6 @@ add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 		$author_class = is_author( $user_id ) ? ' current-author' : '' ;
 		$avatar       = "<img alt='" . esc_attr( $alt ) . "' src='" . $local_avatars[$size] . "' class='avatar avatar-{$size}{$author_class} photo' height='{$size}' width='{$size}' />";
 		return apply_filters( 'min_user_avatar', $avatar );
-remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 }
 	
 
@@ -220,7 +222,7 @@ remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 					echo '<input type="file" name="min-user-avatar" id="min-local-avatar" /><br />';
 
 					if ( empty( $profileuser->min_user_avatar ) ) {
-						echo '<span class="description">' . __( 'No local avatar is set. Use the upload field to add a local avatar.', 'min-user-avatars' ) . '</span>';
+						echo '<span class="description">' . __( 'No local photo is set. Use the upload field to add a local avatar.', 'min-user-avatars' ) . '</span>';
 					} else {
 						echo '<input type="checkbox" name="min-user-avatar-erase" value="1" /> ' . __( 'Delete local avatar', 'min-user-avatars' ) . '<br />';
 						echo '<span class="description">' . __( 'Replace the local avatar by uploading a new avatar, or erase the local avatar (falling back to a gravatar) by checking the delete option.', 'min-user-avatars' ) . '</span>';
@@ -228,7 +230,7 @@ remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 
 				} else {
 					if ( empty( $profileuser->min_user_avatar ) ) {
-						echo '<span class="description">' . __( 'No local avatar is set. Set up your avatar at Gravatar.com.', 'min-user-avatars' ) . '</span>';
+						echo '<span class="description">' . __( 'No local avatar is set, you don´t have permissions to set one, ask your administrator.', 'min-user-avatars' ) . '</span>';
 					} else {
 						echo '<span class="description">' . __( 'You do not have media management permissions. To change your local avatar, contact the site administrator.', 'min-user-avatars' ) . '</span>';
 					}	
@@ -248,7 +250,6 @@ remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 	 * @param int $user_id
 	 */
 	public function edit_user_profile_update( $user_id ) {
-add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 		// Check for nonce otherwise bail
 		if ( ! isset( $_POST['_min_user_avatar_nonce'] ) || ! wp_verify_nonce( $_POST['_min_user_avatar_nonce'], 'min_user_avatar_nonce' ) )
 			return;
@@ -275,8 +276,9 @@ add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 
 			// Make user_id known to unique_filename_callback function
 			$this->user_id_being_edited = $user_id; 
+			add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 			$avatar = wp_handle_upload( $_FILES['min-user-avatar'], array( 'mimes' => $mimes, 'test_form' => false, 'unique_filename_callback' => array( $this, 'unique_filename_callback' ) ) );
-
+      remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 			// Handle failures
 			if ( empty( $avatar['file'] ) ) {  
 				switch ( $avatar['error'] ) {
@@ -296,7 +298,6 @@ add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 			// Nuke the current avatar
 			$this->avatar_delete( $user_id );
 		}
-remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 }
 
 	/**
@@ -320,11 +321,10 @@ remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 	 */
 	public function avatar_delete( $user_id ) {
 		$old_avatars = get_user_meta( $user_id, 'min_user_avatar', true );
-		$upload_path = self::$options['upload_path'];
 
 		if ( is_array( $old_avatars ) ) {
 			foreach ( $old_avatars as $old_avatar ) {
-				$old_avatar_path = str_replace( $upload_path['baseurl'], $upload_path['basedir'], $old_avatar );
+				$old_avatar_path = str_replace( self::$options['upload_path']['baseurl'], self::$options['upload_path']['basedir'], $old_avatar );
 				@unlink( $old_avatar_path );
 			}
 		}
@@ -339,18 +339,10 @@ remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 	 * @param int $user_id
 	 */
 	public function set_avatar_directory( $param ){
-    $mydir = '/photos';
 
-    $param['path'] = $param['basedir'] . $mydir;
-    $param['url'] = $param['baseurl'] . $mydir;
-	/*
-    error_log("path={$param['path']}");  
-    error_log("url={$param['url']}");
-    error_log("subdir={$param['subdir']}");
-    error_log("basedir={$param['basedir']}");
-    error_log("baseurl={$param['baseurl']}");
-    error_log("error={$param['error']}"); 
-	*/
+    $param['path'] = $param['basedir'] . "/". self::$options['upload_dir'];
+    $param['url'] = $param['baseurl'] . "/". self::$options['upload_dir'];
+
 	return $param;
 	}
 
@@ -365,7 +357,7 @@ remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
 	 */
 	public function unique_filename_callback( $dir, $name, $ext ) {
 		$user = get_user_by( 'id', (int) $this->user_id_being_edited );
-		$name = $base_name = sanitize_file_name( $user->display_name . '_avatar' );
+		$name = $base_name = sanitize_file_name( $user->display_name . '' );
 		$number = 1;
 
 		while ( file_exists( $dir . "/$name$ext" ) ) {
