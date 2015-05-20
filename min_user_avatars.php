@@ -47,6 +47,7 @@ class min_user_avatars {
 	private $user_id_being_edited;
 	private static $options = NULL;
 
+
 	/**
 	 * Initialize all the things
 	 *
@@ -73,9 +74,11 @@ class min_user_avatars {
 		add_action( 'personal_options_update',   array( $this, 'edit_user_profile_update' )        );//own profile
 		add_action( 'edit_user_profile_update',  array( $this, 'edit_user_profile_update' )        );//others profile
 
-		// Filters
-		add_filter( 'get_avatar',                array( $this, 'get_avatar_filter'               ), 20 ,6);
-		add_filter( 'avatar_defaults',           array( $this, 'avatar_defaults_filter'          )        );
+ 		// Filters
+		add_filter( 'pre_get_avatar',            array(__CLASS__, 'pre_get_avatar_filter' ),10,3);//adjust also priority of remove_filter!
+		add_filter( 'avatar_defaults',           array(__CLASS__, 'avatar_defaults_filter'),10  );
+		//Shortcode
+		add_shortcode('author',                  array(__CLASS__, 'print_author'));
 	}
 
 	/**
@@ -160,8 +163,8 @@ class min_user_avatars {
 	 * @param boolean $alt 
 	 * @return string
 	 */
-	public function get_avatar_filter( $avatar = '', $id_or_email, $size = 96, $default = '', $alt = false,$args=null ) {
-  if ($default==="NOLINK"){$avatar="";}
+	public function pre_get_avatar_filter( $avatar = '', $id_or_email, $args=null ) {
+    $avatar="";
 			// Determine if we recive an ID or string
 		if ( is_numeric( $id_or_email ) )
 			$user_id = (int) $id_or_email;
@@ -329,9 +332,9 @@ class min_user_avatars {
 
 			// Make user_id known to unique_filename_callback function
 			$this->user_id_being_edited = $user_id; 
-			add_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
+			add_filter( 'upload_dir',  array( $this, 'set_avatar_directory'));
 			$avatar = wp_handle_upload( $_FILES['min-user-avatar'], array( 'mimes' => $mimes, 'test_form' => false, 'unique_filename_callback' => array( $this, 'unique_filename_callback' ) ) );
-      remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory') );
+      remove_filter( 'upload_dir',  array( $this, 'set_avatar_directory'));
 			// Handle failures
 			if ( empty( $avatar['file'] ) ) {  
 				switch ( $avatar['error'] ) {
@@ -362,8 +365,8 @@ class min_user_avatars {
 	 * @return array
 	 */
 	public function avatar_defaults_filter( $avatar_defaults ) {
-		remove_action( 'get_avatar', array( $this, 'get_avatar_filter' ) );
-		return $avatar_defaults;
+		remove_action( 'pre_get_avatar', array(__CLASS__, 'pre_get_avatar_filter' ),10);
+	 return $avatar_defaults;
 	}
 
 	/**
@@ -456,6 +459,41 @@ class min_user_avatars {
     update_user_meta( $user->ID, 'min_user_avatar', $avatars);
   }
 }
+
+/* Shortcode display author */
+function print_author($atts){
+
+        /* If the user passed an integer then good to go */
+        if (is_numeric($atts[0])) {
+                $authorid = $atts[0];
+           }
+        if (strpos($atts[0],'@') !==false) {
+                $email = $atts[0];
+                $user = get_user_by_email($email);
+                $authorid=$user->ID;
+       }
+
+        if (!empty($authorid)){
+              ob_start();
+              echo "<table style=\"border:0;width:200px\"><tr><td style=border:0>";
+              echo get_avatar($authorid,64);
+              echo "</td>";
+              echo '<td style=border:0><a href="'.get_author_posts_url($authorid).'/">';
+              echo the_author_meta('display_name', $authorid );
+
+        echo '</a></td></tr></table>';
+        $output_string = ob_get_contents();
+        ob_end_clean();
+        }
+return $output_string;
+}
+
+//add_filter('my_authors_meta', 'do_shortcode');
+/* Start Get Author Link call [author id] */
+
+
+
+
 	
 	
 }
