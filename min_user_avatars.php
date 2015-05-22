@@ -75,10 +75,10 @@ class min_user_avatars {
 		add_action( 'edit_user_profile_update',  array( $this, 'edit_user_profile_update' )        );//others profile
 
  		// Filters
-		add_filter( 'pre_get_avatar',            array(__CLASS__, 'pre_get_avatar_filter' ),10,3);//adjust also priority of remove_filter!
-		add_filter( 'avatar_defaults',           array(__CLASS__, 'avatar_defaults_filter'),10  );
+		add_filter( 'pre_get_avatar',            array($this, 'pre_get_avatar_filter' ),10,3);//adjust also priority of remove_filter!
+		add_filter( 'avatar_defaults',           array($this, 'avatar_defaults_filter'),10  );
 		//Shortcode
-		add_shortcode('author',                  array(__CLASS__, 'print_author'));
+		add_shortcode('author',                  array($this, 'print_author'));
 	}
 
 	/**
@@ -100,9 +100,9 @@ class min_user_avatars {
 	 */
 	public function admin_init() {
 		// Register/add the Discussion setting to restrict avatar upload capabilites
-		register_setting( 'discussion', 'min_user_avatars_caps', array( __CLASS__, 'sanitize_options' ) );
-		register_setting( 'discussion', 'min_user_delete_non_scaled', array( __CLASS__, 'sanitize_options' ) );
-		add_settings_field( 'min-user-avatars-caps', __( 'Local Avatar Permissions', 'min-user-avatars' ), array( __CLASS__, 'avatar_settings_field' ), 'discussion', 'avatars' );
+		register_setting( 'discussion', 'min_user_avatars_caps', array($this, 'sanitize_options' ) );
+		register_setting( 'discussion', 'min_user_delete_non_scaled', array( $this, 'sanitize_options' ) );
+		add_settings_field( 'min-user-avatars-caps', __( 'Local Avatar Permissions', 'min-user-avatars' ), array( $this, 'avatar_settings_field' ), 'discussion', 'avatars' );
 
 	}
 
@@ -201,9 +201,9 @@ class min_user_avatars {
 	       );
 
       if(empty($args)){$args = array();}
-          $args['size']    = (int) $size;
-	        $args['default'] = $default;
-	        $args['alt']     = $alt;
+         // $args['size']    = (int) $size;
+	       // $args['default'] = $default;
+	       // $args['alt']     = $alt;
      $args = wp_parse_args( $args, $defaults );
 	
 	        if (empty( $args['height'])) {
@@ -365,7 +365,7 @@ class min_user_avatars {
 	 * @return array
 	 */
 	public function avatar_defaults_filter( $avatar_defaults ) {
-		remove_action( 'pre_get_avatar', array(__CLASS__, 'pre_get_avatar_filter' ),10);
+		remove_action( 'pre_get_avatar', array($this, 'pre_get_avatar_filter' ),10);
 	 return $avatar_defaults;
 	}
 
@@ -462,15 +462,15 @@ class min_user_avatars {
 
 /* Shortcode display author */
 function print_author($atts){
-
+$output_string="";
         /* If the user passed an integer then good to go */
         if (is_numeric($atts[0])) {
                 $authorid = $atts[0];
            }
         if (strpos($atts[0],'@') !==false) {
                 $email = $atts[0];
-                $user = get_user_by_email($email);
-                $authorid=$user->ID;
+                $user = get_user_by('email',$email);
+                if($user)$authorid=$user->ID;
        }
 
         if (!empty($authorid)){
