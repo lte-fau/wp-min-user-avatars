@@ -265,7 +265,7 @@ class min_user_avatars {
 			<tr>
 				<th><label for="min-user-avatar"><?php _e( 'Upload Avatar', 'min-user-avatars' ); ?></label></th>
 				<td style="width: 50px;" valign="top">
-					<?php echo get_avatar( $profileuser->ID ); ?>
+					<?php echo get_avatar($profileuser->ID,'','NOLINK','',array('width'=>150,'height'=>200));?>
 				</td>
 				<td>
 				<?php
