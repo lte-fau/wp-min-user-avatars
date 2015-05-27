@@ -260,10 +260,10 @@ class min_user_avatars {
 	public function edit_user_profile( $profileuser ) {
 		?>
 
-		<h3><?php _e( 'Avatar', 'min-user-avatars' ); ?></h3>
+		<h3><?php _e( 'Photo', 'min-user-avatars' ); ?></h3>
 		<table class="form-table">
 			<tr>
-				<th><label for="min-user-avatar"><?php _e( 'Upload Avatar', 'min-user-avatars' ); ?></label></th>
+				<th><label for="min-user-avatar"><?php _e( 'Upload Photo', 'min-user-avatars' ); ?></label></th>
 				<td style="width: 50px;" valign="top">
 					<?php echo get_avatar($profileuser->ID,'','NOLINK','',array('width'=>150,'height'=>200));?>
 				</td>
@@ -278,17 +278,17 @@ class min_user_avatars {
 					echo '<input type="file" name="min-user-avatar" id="min-local-avatar" /><br />';
 
 					if ( empty( $profileuser->min_user_avatar ) ) {
-						echo '<span class="description">' . __( 'No local photo is set. Use the upload field to add a local avatar.', 'min-user-avatars' ) . '</span>';
+						echo '<span class="description">' . __( 'No local photo is set. Use the upload field to add a local photo.', 'min-user-avatars' ) . '</span>';
 					} else {
-						echo '<input type="checkbox" name="min-user-avatar-erase" value="1" /> ' . __( 'Delete local avatar', 'min-user-avatars' ) . '<br />';
-						echo '<span class="description">' . __( 'Replace the local avatar by uploading a new avatar, or erase the local avatar (falling back to a gravatar) by checking the delete option.', 'min-user-avatars' ) . '</span>';
+						echo '<input type="checkbox" name="min-user-avatar-erase" value="1" /> ' . __( 'Delete local photo', 'min-user-avatars' ) . '<br />';
+						echo '<span class="description">' . __( 'Replace the local photo by uploading a new photo, or erase the local photo by checking the delete option.', 'min-user-avatars' ) . '</span>';
 					}
 
 				} else {
 					if ( empty( $profileuser->min_user_avatar ) ) {
-						echo '<span class="description">' . __( 'No local avatar is set, you don´t have permissions to set one, ask your administrator.', 'min-user-avatars' ) . '</span>';
+						echo '<span class="description">' . __( 'No local photo is set, you don´t have permissions to set one, ask your administrator.', 'min-user-avatars' ) . '</span>';
 					} else {
-						echo '<span class="description">' . __( 'You do not have media management permissions. To change your local avatar, contact the site administrator.', 'min-user-avatars' ) . '</span>';
+						echo '<span class="description">' . __( 'You do not have media management permissions. To change your local photo, contact the site administrator.', 'min-user-avatars' ) . '</span>';
 					}	
 				}
 				?>
