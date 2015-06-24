@@ -476,7 +476,7 @@ $output_string="";
         if (!empty($authorid)){
               ob_start();
               echo "<table style=\"border:0;width:200px\"><tr><td style=border:0>";
-              echo get_avatar($authorid,64);
+              echo get_avatar($authorid,'','NOLINK','',array('width'=>'64px','height'=>'85px'));
               echo "</td>";
               echo '<td style=border:0><a href="'.get_author_posts_url($authorid).'/">';
               echo the_author_meta('display_name', $authorid );
