@@ -140,7 +140,7 @@ class min_user_avatars {
 	 */
 	public function sanitize_options( $input ) {
 		$new_input['min_user_avatars_caps'] =  $input['min_user_avatars_caps'] ? 1 : 0;
-		print_r($input);
+		//print_r($input);
 		
 		if($input['min_user_delete_non_scaled']){
 		echo "delete requested";
@@ -175,11 +175,11 @@ class min_user_avatars {
 
 		if ( empty( $user_id ) )
 			return $avatar;
-
+//echo $id_or_email;
 		$local_avatars = get_user_meta( $user_id, 'min_user_avatar', true );
-	/*	print("<pre>");
-		print_r($local_avatars);
-		print("</pre>");*/
+		//print("<pre>");
+		//print_r($local_avatars);
+		//print("</pre>");
 		if ( empty( $local_avatars ) || empty( $local_avatars['full'] ) )
     {
     return $avatar;
@@ -377,6 +377,7 @@ class min_user_avatars {
 	 */
 	public function avatar_delete( $user_id ) {
 		$old_avatars = get_user_meta( $user_id, 'min_user_avatar', true );
+//print_r(self::$options['upload_path']);
 
 		if ( is_array( $old_avatars ) ) {
 			foreach ( $old_avatars as $old_avatar ) {
@@ -513,5 +514,4 @@ function min_user_avatars_uninstall() {
 
 	delete_option( 'min_user_avatars_caps');
 }
-
 register_uninstall_hook( __FILE__, 'min_user_avatars_uninstall' );
