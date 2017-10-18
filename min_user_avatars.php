@@ -147,7 +147,7 @@ class min_user_avatars {
 		self::min_user_delete_scaled();
 		echo "All deleted";
 		
-		break;
+		exit;
 		}
 		return $new_input;
 	}
